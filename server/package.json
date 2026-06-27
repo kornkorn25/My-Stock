@@ -7,7 +7,7 @@
     "dev": "tsx watch src/app.ts",
     "build": "prisma generate --schema=src/prisma/schema.prisma && tsc",
     "start": "node dist/app.js",
-    "start:railway": "prisma db push --schema=src/prisma/schema.prisma --skip-generate && node dist/app.js",
+    "start:prod": "prisma db push --schema=src/prisma/schema.prisma --skip-generate && node dist/app.js",
     "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema=src/prisma/schema.prisma",
     "prisma:deploy": "prisma migrate deploy --schema=src/prisma/schema.prisma",

@@ -1,17 +1,14 @@
-// Prisma schema for Stock Portfolio Tracker
-// Provider is SQLite for an easy start. To move to Postgres later:
-//   1. set provider = "postgresql"
-//   2. set DATABASE_URL to your Postgres connection string
-//   3. (optional) convert `type String` -> a real enum, supported on Postgres
-//   4. run `prisma migrate dev`
-// All money/share fields use Decimal to avoid floating point errors.
+// Prisma schema for MyStock.
+// Uses PostgreSQL. Set DATABASE_URL to your Postgres connection string
+// (Neon, Supabase, local Postgres, etc.). All money/share fields use Decimal
+// to avoid floating point errors.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
