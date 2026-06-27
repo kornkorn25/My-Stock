@@ -1,5 +1,8 @@
 # MyStock
 
+Live at https://mystock-clh0.onrender.com (it's on a free plan, so the first
+visit after a while takes a moment to wake up).
+
 A web app for keeping track of a US stock portfolio. You sign up, type in your
 own buys and sells, and the app works out what you're holding, your average cost,
 profit and loss, and how your money is split across stocks. Prices come in close
