@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300;
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
+/* Animated gradient mesh used behind the auth screen. */
+.auth-aurora {
+  background: linear-gradient(120deg, #6366f1, #0ea5e9, #14b8a6, #8b5cf6);
+  background-size: 300% 300%;
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

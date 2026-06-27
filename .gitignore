@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+
+# Secrets & local env
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Database files
+*.db
+*.db-journal
+**/*.db
+**/*.db-journal
+
+# Markdown docs/notes (kept local, not pushed)
+*.md
+**/*.md
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,77 @@
+// Prisma schema for Stock Portfolio Tracker
+// Provider is SQLite for an easy start. To move to Postgres later:
+//   1. set provider = "postgresql"
+//   2. set DATABASE_URL to your Postgres connection string
+//   3. (optional) convert `type String` -> a real enum, supported on Postgres
+//   4. run `prisma migrate dev`
+// All money/share fields use Decimal to avoid floating point errors.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String? // null for Google-only accounts
+  displayName   String
+  emailVerified Boolean  @default(false)
+  googleId      String?  @unique
+  createdAt     DateTime @default(now())
+
+  transactions       Transaction[]
+  holdings           Holding[]
+  verificationTokens VerificationToken[]
+}
+
+// One-time tokens for email-confirmed changes (email / password).
+// payload holds the pending value: the new email, or the new bcrypt hash.
+model VerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // "EMAIL_CHANGE" | "PASSWORD_CHANGE"
+  token     String   @unique
+  payload   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Transaction {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol     String // stored uppercase, e.g. "PLTR"
+  type       String // "BUY" | "SELL" (enum not supported on SQLite; validated via zod)
+  quantity   Decimal // fractional shares supported, e.g. 0.12340000
+  price      Decimal // price per share at execution
+  fee        Decimal  @default(0)
+  note       String?
+  executedAt DateTime // user-specified execution datetime
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, symbol])
+}
+
+model Holding {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol      String
+  quantity    Decimal // current shares held
+  avgCost     Decimal // average cost per share
+  realizedPnl Decimal  @default(0) // realized P/L from sells
+  targetPct   Decimal? // optional target allocation %, e.g. 25.00
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, symbol])
+  @@index([userId])
+}
