@@ -4,6 +4,7 @@ import { useAuthConfig } from "../hooks/useAuthConfig";
 import { api, ApiError } from "../lib/api";
 import { GoogleButton } from "../components/GoogleButton";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { Logo } from "../components/Logo";
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-slate-300 dark:focus:ring-white/10";
@@ -81,7 +82,10 @@ export function Login() {
           style={{ animationDelay: "1.5s" }}
         />
         <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
-          <div className="text-lg font-bold tracking-tight">MyStock</div>
+          <div className="flex items-center gap-2 text-lg font-bold tracking-tight">
+            <Logo size={26} />
+            MyStock
+          </div>
           <div>
             <h1 className="max-w-sm text-4xl font-bold leading-tight drop-shadow-sm">
               Know what your portfolio is actually worth.

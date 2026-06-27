@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
 
 export function Layout() {
   const { user, logout } = useAuth();
@@ -27,7 +28,11 @@ export function Layout() {
       <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-6">
-            <Link to="/" className="text-lg font-bold tracking-tight dark:text-white">
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-lg font-bold tracking-tight dark:text-white"
+            >
+              <Logo size={24} />
               MyStock
             </Link>
             <nav className="flex gap-1">
