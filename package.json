@@ -1,0 +1,13 @@
+{
+  "name": "mystock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MyStock portfolio tracker (client + server)",
+  "scripts": {
+    "build": "npm --prefix client install --include=dev && npm --prefix client run build && npm --prefix server install --include=dev && npm --prefix server run build",
+    "start": "npm --prefix server run start:railway"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

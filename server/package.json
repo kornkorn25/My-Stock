@@ -7,6 +7,7 @@
     "dev": "tsx watch src/app.ts",
     "build": "prisma generate --schema=src/prisma/schema.prisma && tsc",
     "start": "node dist/app.js",
+    "start:railway": "prisma db push --schema=src/prisma/schema.prisma --skip-generate && node dist/app.js",
     "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema=src/prisma/schema.prisma",
     "prisma:deploy": "prisma migrate deploy --schema=src/prisma/schema.prisma",
@@ -27,6 +28,7 @@
     "google-auth-library": "^10.9.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^9.0.1",
+    "prisma": "^5.22.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -36,7 +38,6 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.9.0",
     "@types/nodemailer": "^8.0.1",
-    "prisma": "^5.22.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.5"
