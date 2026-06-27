@@ -18,9 +18,10 @@ dist/
 **/*.db
 **/*.db-journal
 
-# Markdown docs/notes (kept local, not pushed)
+# Markdown docs/notes (kept local, not pushed) except the main README
 *.md
 **/*.md
+!/README.md
 
 # Logs
 *.log
