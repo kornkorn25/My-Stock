@@ -1,22 +1,35 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useTransactions,
   useDeleteTransaction,
   useUpdateTransaction,
 } from "../hooks/usePortfolio";
 import { Transaction } from "../lib/types";
-import { money, shares, formatDate } from "../lib/format";
+import { shares, formatDate } from "../lib/format";
+import { useMoney } from "../hooks/useCurrency";
 import { ApiError } from "../lib/api";
 
 export function History() {
   const { data, isLoading, isError, error } = useTransactions();
+  const { money } = useMoney();
   const del = useDeleteTransaction();
   const update = useUpdateTransaction();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Transaction>>({});
   const [rowError, setRowError] = useState<string | null>(null);
+  const [symbolFilter, setSymbolFilter] = useState("");
 
-  const txs = data?.transactions ?? [];
+  const allTxs = data?.transactions ?? [];
+
+  const symbols = useMemo(
+    () => Array.from(new Set(allTxs.map((t) => t.symbol))).sort(),
+    [allTxs]
+  );
+
+  const filter = symbolFilter.trim().toUpperCase();
+  const txs = filter
+    ? allTxs.filter((t) => t.symbol.includes(filter))
+    : allTxs;
 
   function startEdit(t: Transaction) {
     setEditing(t.id);
@@ -67,7 +80,34 @@ export function History() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold dark:text-white">Transaction History</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold dark:text-white">Transaction History</h1>
+
+        {allTxs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <input
+              list="history-symbols"
+              value={symbolFilter}
+              onChange={(e) => setSymbolFilter(e.target.value.toUpperCase())}
+              placeholder="Filter by symbol…"
+              className="w-44 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm uppercase placeholder:normal-case placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+            <datalist id="history-symbols">
+              {symbols.map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+            {filter && (
+              <button
+                onClick={() => setSymbolFilter("")}
+                className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs text-slate-500 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {isLoading && <div className="text-slate-400">Loading…</div>}
       {isError && (
@@ -79,9 +119,15 @@ export function History() {
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">{rowError}</div>
       )}
 
-      {data && txs.length === 0 && (
+      {data && allTxs.length === 0 && (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-400 dark:border-slate-700 dark:bg-slate-900">
           No transactions yet.
+        </div>
+      )}
+
+      {data && allTxs.length > 0 && txs.length === 0 && (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-400 dark:border-slate-700 dark:bg-slate-900">
+          No transactions for “{filter}”.
         </div>
       )}
 

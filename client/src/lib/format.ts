@@ -5,26 +5,42 @@ export function num(v: string | number | null | undefined): number {
   return typeof v === "number" ? v : Number(v);
 }
 
-export function money(v: string | number | null | undefined, opts?: { dp?: number }): string {
+export type Currency = "USD" | "THB";
+
+/**
+ * Format a USD-denominated amount in the chosen display currency. All values
+ * from the API are in USD; `rate` is USD->quote (e.g. USD->THB). Prefer the
+ * `useMoney()` hook in components so the currency/rate come from context.
+ */
+export function formatMoney(
+  v: string | number | null | undefined,
+  currency: Currency = "USD",
+  rate = 1,
+  opts?: { dp?: number }
+): string {
   const dp = opts?.dp ?? 2;
-  return num(v).toLocaleString("en-US", {
+  const value = currency === "USD" ? num(v) : num(v) * rate;
+  return value.toLocaleString(currency === "THB" ? "th-TH" : "en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
     minimumFractionDigits: dp,
     maximumFractionDigits: dp,
   });
+}
+
+export function formatSigned(
+  v: string | number | null | undefined,
+  currency: Currency = "USD",
+  rate = 1
+): string {
+  const sign = num(v) > 0 ? "+" : "";
+  return `${sign}${formatMoney(v, currency, rate)}`;
 }
 
 export function pct(v: string | number | null | undefined, dp = 2): string {
   const n = num(v);
   const sign = n > 0 ? "+" : "";
   return `${sign}${n.toFixed(dp)}%`;
-}
-
-export function signed(v: string | number | null | undefined): string {
-  const n = num(v);
-  const sign = n > 0 ? "+" : "";
-  return `${sign}${money(n)}`;
 }
 
 /** Shares can be fractional; trim trailing zeros but keep meaningful precision. */

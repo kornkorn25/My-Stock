@@ -1,5 +1,6 @@
 import { PortfolioSummary } from "../lib/types";
-import { money, pct, signed, gainLossClass } from "../lib/format";
+import { pct, gainLossClass } from "../lib/format";
+import { useMoney } from "../hooks/useCurrency";
 
 function Card({
   label,
@@ -22,6 +23,7 @@ function Card({
 }
 
 export function SummaryCards({ summary }: { summary: PortfolioSummary }) {
+  const { money, signed } = useMoney();
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <Card label="Total Value" value={money(summary.totalValue)} />

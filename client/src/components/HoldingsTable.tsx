@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Position } from "../lib/types";
-import { money, pct, signed, shares, gainLossClass, num } from "../lib/format";
+import { pct, shares, gainLossClass, num } from "../lib/format";
 import { useDeleteHolding } from "../hooks/usePortfolio";
+import { useMoney } from "../hooks/useCurrency";
 import { StockLogo } from "./StockLogo";
 
 export function HoldingsTable({
@@ -13,6 +14,7 @@ export function HoldingsTable({
 }) {
   const navigate = useNavigate();
   const deleteHolding = useDeleteHolding();
+  const { money, signed } = useMoney();
 
   function removeStock(symbol: string) {
     if (
@@ -33,7 +35,7 @@ export function HoldingsTable({
   }
 
   const sorted = [...positions].sort(
-    (a, b) => num(b.allocationPct) - num(a.allocationPct)
+    (a, b) => num(a.allocationPct) - num(b.allocationPct)
   );
 
   return (
@@ -108,9 +110,25 @@ export function HoldingsTable({
                     onClick={() => removeStock(p.symbol)}
                     disabled={deleteHolding.isPending}
                     title="Remove from portfolio"
-                    className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/50"
+                    aria-label={`Remove ${p.symbol} from portfolio`}
+                    className="rounded border border-slate-300 px-2 py-1 text-slate-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-500 dark:hover:border-red-900 dark:hover:bg-red-950/50 dark:hover:text-red-400"
                   >
-                    Remove
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
                   </button>
                 </div>
               </td>

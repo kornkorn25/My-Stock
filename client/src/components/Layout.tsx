@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { ThemeToggle } from "./ThemeToggle";
+import { CurrencyToggle } from "./CurrencyToggle";
 import { Logo } from "./Logo";
 
 export function Layout() {
@@ -48,6 +49,7 @@ export function Layout() {
             >
               {user?.displayName}
             </Link>
+            <CurrencyToggle />
             <ThemeToggle />
             <button
               onClick={logout}

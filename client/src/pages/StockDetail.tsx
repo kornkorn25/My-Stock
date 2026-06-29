@@ -7,7 +7,8 @@ import { usePortfolio, useDeleteHolding } from "../hooks/usePortfolio";
 import { useQuote } from "../hooks/useQuote";
 import { useProfile } from "../hooks/useProfile";
 import { AddTransactionModal } from "../components/AddTransactionModal";
-import { money, pct, signed, shares, gainLossClass } from "../lib/format";
+import { pct, shares, gainLossClass } from "../lib/format";
+import { useMoney } from "../hooks/useCurrency";
 import { TxType } from "../lib/types";
 
 function Stat({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
@@ -23,6 +24,7 @@ export function StockDetail() {
   const { symbol = "" } = useParams();
   const sym = symbol.toUpperCase();
   const navigate = useNavigate();
+  const { money, signed } = useMoney();
   const { data } = usePortfolio();
   const quote = useQuote(sym);
   const profile = useProfile(sym);

@@ -1,7 +1,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Position } from "../lib/types";
-import { num, money } from "../lib/format";
+import { num } from "../lib/format";
 import { useTheme } from "../hooks/useTheme";
+import { useMoney } from "../hooks/useCurrency";
 
 const COLORS = [
   "#0ea5e9", "#6366f1", "#f59e0b", "#10b981", "#ef4444",
@@ -52,6 +53,7 @@ function renderLabel({ cx, cy, midAngle, outerRadius, name, allocation }: LabelP
 
 export function AllocationPie({ positions }: { positions: Position[] }) {
   const { theme } = useTheme();
+  const { money } = useMoney();
   const dark = theme === "dark";
   const data = positions
     .filter((p) => p.marketValue && num(p.marketValue) > 0)
@@ -59,7 +61,8 @@ export function AllocationPie({ positions }: { positions: Position[] }) {
       name: p.symbol,
       value: num(p.marketValue),
       allocation: num(p.allocationPct),
-    }));
+    }))
+    .sort((a, b) => a.allocation - b.allocation);
 
   if (data.length === 0) {
     return (

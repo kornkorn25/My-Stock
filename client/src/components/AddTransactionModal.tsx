@@ -5,7 +5,8 @@ import { useQuote } from "../hooks/useQuote";
 import { useProfile } from "../hooks/useProfile";
 import { StockLogo } from "./StockLogo";
 import { ApiError } from "../lib/api";
-import { money, num, shares } from "../lib/format";
+import { num, shares } from "../lib/format";
+import { useMoney, useCurrency } from "../hooks/useCurrency";
 
 interface Props {
   open: boolean;
@@ -25,9 +26,14 @@ export function AddTransactionModal({
   initialType = "BUY",
 }: Props) {
   const create = useCreateTransaction();
+  const { money, currency: displayCur } = useMoney();
+  const { rate } = useCurrency();
   const [symbol, setSymbol] = useState(initialSymbol);
   const [type, setType] = useState<TxType>(initialType);
+  // Two ways to size the trade: by share count, or by a money budget.
+  const [sizeMode, setSizeMode] = useState<"shares" | "amount">("shares");
   const [quantity, setQuantity] = useState("");
+  const [amount, setAmount] = useState("");
   const [price, setPrice] = useState("");
   const [fee, setFee] = useState("");
   const [note, setNote] = useState("");
@@ -38,7 +44,9 @@ export function AddTransactionModal({
     if (open) {
       setSymbol(initialSymbol);
       setType(initialType);
+      setSizeMode("shares");
       setQuantity("");
+      setAmount("");
       setPrice("");
       setFee("");
       setNote("");
@@ -83,13 +91,22 @@ export function AddTransactionModal({
       ? "invalid"
       : "valid";
 
+  // Resolve the share count from whichever sizing mode is active. In "amount"
+  // mode the budget is entered in the display currency, so convert to USD
+  // (prices are USD) before dividing by price → shares = budget / price.
+  const priceNum = num(price);
+  const amountUSD =
+    displayCur === "THB" && rate > 0 ? num(amount) / rate : num(amount);
+  const sharesFromAmount = priceNum > 0 ? amountUSD / priceNum : 0;
+  const effQty = sizeMode === "amount" ? sharesFromAmount : num(quantity);
+
   const canSubmit =
-    symbolStatus === "valid" && !create.isPending && num(quantity) > 0 && num(price) > 0;
+    symbolStatus === "valid" && !create.isPending && effQty > 0 && priceNum > 0;
 
   // Live preview of avg cost / remaining qty (display only).
   const preview = useMemo(() => {
-    const q = num(quantity);
-    const pr = num(price);
+    const q = effQty;
+    const pr = priceNum;
     const f = num(fee);
     const oldQty = current ? num(current.quantity) : 0;
     const oldAvg = current ? num(current.avgCost) : 0;
@@ -99,7 +116,7 @@ export function AddTransactionModal({
     if (type === "BUY") {
       const newQty = oldQty + q;
       const newAvg = (oldQty * oldAvg + q * pr + f) / newQty;
-      return { label: "New avg cost", value: money(newAvg), qty: newQty };
+      return { label: "New avg cost", value: money(newAvg), qty: newQty, txQty: q };
     } else {
       if (q > oldQty) return { error: `Only ${shares(oldQty)} shares held` };
       const realized = (pr - oldAvg) * q - f;
@@ -107,10 +124,11 @@ export function AddTransactionModal({
         label: "Realized P/L",
         value: money(realized),
         qty: oldQty - q,
+        txQty: q,
         realized,
       };
     }
-  }, [quantity, price, fee, type, current]);
+  }, [effQty, priceNum, fee, type, current, money]);
 
   if (!open) return null;
 
@@ -125,7 +143,9 @@ export function AddTransactionModal({
       await create.mutateAsync({
         symbol: symbol.toUpperCase().trim(),
         type,
-        quantity,
+        // When sizing by budget, persist the derived share count (fractional ok).
+        quantity:
+          sizeMode === "amount" ? String(Number(effQty.toFixed(8))) : quantity,
         price,
         fee: fee || undefined,
         note: note || undefined,
@@ -211,20 +231,62 @@ export function AddTransactionModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                Quantity (fractional ok)
-              </label>
-              <input
-                value={quantity}
-                onChange={decimalOnly(setQuantity)}
-                required
-                inputMode="decimal"
-                placeholder="0.1234"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-300"
-              />
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {sizeMode === "shares" ? "Quantity" : `Budget (${displayCur})`}
+                </label>
+                <div className="flex overflow-hidden rounded-md border border-slate-200 text-[10px] font-semibold dark:border-slate-700">
+                  {(["shares", "amount"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setSizeMode(m)}
+                      className={`px-1.5 py-0.5 transition ${
+                        sizeMode === m
+                          ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                          : "bg-white text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      {m === "shares" ? "Shares" : "Amount"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {sizeMode === "shares" ? (
+                <input
+                  value={quantity}
+                  onChange={decimalOnly(setQuantity)}
+                  required
+                  inputMode="decimal"
+                  placeholder="0.1234"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-300"
+                />
+              ) : (
+                <input
+                  value={amount}
+                  onChange={decimalOnly(setAmount)}
+                  required
+                  inputMode="decimal"
+                  placeholder={displayCur === "THB" ? "10000" : "1000"}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-slate-300"
+                />
+              )}
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Price / share</label>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Price / share (USD)
+                </label>
+                {symbolStatus === "valid" && check.data && (
+                  <button
+                    type="button"
+                    onClick={() => setPrice(String(check.data!.quote.current))}
+                    className="text-[10px] font-semibold text-sky-600 hover:underline dark:text-sky-400"
+                  >
+                    Use ${check.data.quote.current.toFixed(2)}
+                  </button>
+                )}
+              </div>
               <input
                 value={price}
                 onChange={decimalOnly(setPrice)}
@@ -274,14 +336,29 @@ export function AddTransactionModal({
               {"error" in preview ? (
                 <span className="text-loss">{preview.error}</span>
               ) : (
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">{preview.label}</span>
-                  <span className="font-semibold dark:text-slate-100">
-                    {preview.value}
-                    <span className="ml-2 text-xs text-slate-400">
-                      = {shares(preview.qty)} shares
+                <div className="space-y-1">
+                  {sizeMode === "amount" && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 dark:text-slate-400">Est. shares</span>
+                      <span className="font-semibold dark:text-slate-100">
+                        ≈ {shares(preview.txQty)}
+                        <span className="ml-2 text-xs text-slate-400">
+                          @ ${priceNum.toFixed(2)}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">{preview.label}</span>
+                    <span className="font-semibold dark:text-slate-100">
+                      {preview.value}
+                      <span className="ml-2 text-xs text-slate-400">
+                        {type === "BUY"
+                          ? `total ${shares(preview.qty)} sh`
+                          : `${shares(preview.qty)} sh left`}
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               )}
             </div>
