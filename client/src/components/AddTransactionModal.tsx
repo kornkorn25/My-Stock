@@ -5,8 +5,8 @@ import { useQuote } from "../hooks/useQuote";
 import { useProfile } from "../hooks/useProfile";
 import { StockLogo } from "./StockLogo";
 import { ApiError } from "../lib/api";
-import { num, shares } from "../lib/format";
-import { useMoney, useCurrency } from "../hooks/useCurrency";
+import { money, num, shares } from "../lib/format";
+import { useCurrency } from "../hooks/useCurrency";
 
 interface Props {
   open: boolean;
@@ -26,8 +26,10 @@ export function AddTransactionModal({
   initialType = "BUY",
 }: Props) {
   const create = useCreateTransaction();
-  const { money, currency: displayCur } = useMoney();
-  const { rate } = useCurrency();
+  // Budget can be entered in the user's display currency; everything else
+  // (avg cost, price, realized P/L) stays in USD.
+  const { currency, rate } = useCurrency();
+  const displayCur = currency === "THB" && rate > 0 ? "THB" : "USD";
   const [symbol, setSymbol] = useState(initialSymbol);
   const [type, setType] = useState<TxType>(initialType);
   // Two ways to size the trade: by share count, or by a money budget.

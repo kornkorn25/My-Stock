@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Position } from "../lib/types";
-import { pct, shares, gainLossClass, num } from "../lib/format";
+import { money, pct, signed, shares, gainLossClass, num } from "../lib/format";
 import { useDeleteHolding } from "../hooks/usePortfolio";
-import { useMoney } from "../hooks/useCurrency";
 import { StockLogo } from "./StockLogo";
 
 export function HoldingsTable({
@@ -14,7 +13,6 @@ export function HoldingsTable({
 }) {
   const navigate = useNavigate();
   const deleteHolding = useDeleteHolding();
-  const { money, signed } = useMoney();
 
   function removeStock(symbol: string) {
     if (
@@ -35,7 +33,7 @@ export function HoldingsTable({
   }
 
   const sorted = [...positions].sort(
-    (a, b) => num(a.allocationPct) - num(b.allocationPct)
+    (a, b) => num(b.allocationPct) - num(a.allocationPct)
   );
 
   return (

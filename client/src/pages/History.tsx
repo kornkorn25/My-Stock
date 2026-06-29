@@ -5,13 +5,11 @@ import {
   useUpdateTransaction,
 } from "../hooks/usePortfolio";
 import { Transaction } from "../lib/types";
-import { shares, formatDate } from "../lib/format";
-import { useMoney } from "../hooks/useCurrency";
+import { money, shares, formatDate } from "../lib/format";
 import { ApiError } from "../lib/api";
 
 export function History() {
   const { data, isLoading, isError, error } = useTransactions();
-  const { money } = useMoney();
   const del = useDeleteTransaction();
   const update = useUpdateTransaction();
   const [editing, setEditing] = useState<string | null>(null);

@@ -37,6 +37,19 @@ export function formatSigned(
   return `${sign}${formatMoney(v, currency, rate)}`;
 }
 
+/**
+ * USD formatters — the canonical currency for every stored value (prices, avg
+ * cost, P/L). Use these everywhere except the top portfolio summary cards,
+ * which convert to the user's chosen display currency via `useMoney()`.
+ */
+export function money(v: string | number | null | undefined, opts?: { dp?: number }): string {
+  return formatMoney(v, "USD", 1, opts);
+}
+
+export function signed(v: string | number | null | undefined): string {
+  return formatSigned(v, "USD", 1);
+}
+
 export function pct(v: string | number | null | undefined, dp = 2): string {
   const n = num(v);
   const sign = n > 0 ? "+" : "";

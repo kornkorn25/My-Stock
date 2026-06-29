@@ -1,13 +1,12 @@
 import { Quote } from "../lib/types";
 import { computePivots } from "../lib/indicators";
-import { useMoney } from "../hooks/useCurrency";
+import { money } from "../lib/format";
 
 /**
  * Shows pivot-based support and resistance levels to help decide entries.
  * Computed from the day's high/low and the previous close.
  */
 export function SupportLevels({ quote }: { quote: Quote }) {
-  const { money } = useMoney();
   const levels = computePivots(quote.high, quote.low, quote.previousClose || quote.current);
   if (!levels) return null;
 
