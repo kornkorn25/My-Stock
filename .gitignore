@@ -6,6 +6,9 @@ node_modules/
 dist/
 **/dist/
 
+# Vercel
+.vercel/
+
 # Secrets & local env
 .env
 .env.local
