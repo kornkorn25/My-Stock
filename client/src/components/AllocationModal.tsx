@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { money } from "../lib/format";
+import { StockLogo } from "./StockLogo";
 
 export interface AllocSlice {
   name: string;
@@ -76,7 +77,7 @@ export function AllocationModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl animate-fade-in-scale rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 dark:ring-1 dark:ring-slate-800"
+        className="max-h-[90vh] w-full max-w-3xl animate-fade-in-scale overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 dark:ring-1 dark:ring-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-2 flex items-start justify-between">
@@ -131,6 +132,29 @@ export function AllocationModal({
             />
           </PieChart>
         </ResponsiveContainer>
+
+        {/* Holding breakdown with company logos. */}
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {data.map((d, i) => (
+            <div
+              key={d.name}
+              className="flex items-center gap-2.5 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"
+            >
+              <span
+                className="h-3 w-1.5 shrink-0 rounded-full"
+                style={{ background: colors[i % colors.length] }}
+              />
+              <StockLogo symbol={d.name} size={24} />
+              <span className="font-semibold text-slate-900 dark:text-white">{d.name}</span>
+              <span className="ml-auto tabular-nums text-xs text-slate-500 dark:text-slate-400">
+                {money(d.value)}
+              </span>
+              <span className="w-12 shrink-0 text-right font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+                {d.allocation.toFixed(1)}%
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
