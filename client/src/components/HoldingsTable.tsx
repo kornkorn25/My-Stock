@@ -105,6 +105,13 @@ export function HoldingsTable({
                     Chart
                   </button>
                   <button
+                    onClick={() => navigate(`/history?symbol=${p.symbol}`)}
+                    title="Edit transactions"
+                    className="rounded border border-slate-300 px-2 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    Edit
+                  </button>
+                  <button
                     onClick={() => removeStock(p.symbol)}
                     disabled={deleteHolding.isPending}
                     title="Remove from portfolio"

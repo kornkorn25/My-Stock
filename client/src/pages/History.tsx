@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   useTransactions,
   useDeleteTransaction,
@@ -12,10 +13,20 @@ export function History() {
   const { data, isLoading, isError, error } = useTransactions();
   const del = useDeleteTransaction();
   const update = useUpdateTransaction();
+  const [searchParams] = useSearchParams();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Transaction>>({});
   const [rowError, setRowError] = useState<string | null>(null);
-  const [symbolFilter, setSymbolFilter] = useState("");
+  // Pre-fill the symbol filter from ?symbol= (e.g. the Edit button on a holding).
+  const [symbolFilter, setSymbolFilter] = useState(
+    () => searchParams.get("symbol")?.toUpperCase() ?? ""
+  );
+
+  // Keep the filter in sync when navigated here with a different ?symbol=.
+  useEffect(() => {
+    const s = searchParams.get("symbol");
+    if (s) setSymbolFilter(s.toUpperCase());
+  }, [searchParams]);
 
   const allTxs = data?.transactions ?? [];
 
