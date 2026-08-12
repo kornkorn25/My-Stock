@@ -20,6 +20,12 @@ export const env = {
   quoteCacheTtl: Number(process.env.QUOTE_CACHE_TTL ?? 45),
   clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
 
+  // Shared secret Vercel sends as `Authorization: Bearer $CRON_SECRET` on cron
+  // invocations (set as an env var of the same name in Vercel project
+  // settings). Empty = the cron endpoint is unauthenticated (fine for local
+  // dev, not for production).
+  cronSecret: process.env.CRON_SECRET ?? "",
+
   // Public base URL of THIS server, used to build verification links sent by
   // email. The link is opened directly in a browser, so it must reach the API.
   serverPublicUrl:

@@ -12,6 +12,8 @@ import { portfolioRouter } from "./routes/portfolio";
 import { quoteRouter } from "./routes/quote";
 import { profileRouter } from "./routes/profile";
 import { fxRouter } from "./routes/fx";
+import { levelsRouter } from "./routes/levels";
+import { cronRouter } from "./routes/cron";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
@@ -36,6 +38,8 @@ app.use("/api/portfolio", portfolioRouter);
 app.use("/api/quote", quoteLimiter, quoteRouter);
 app.use("/api/profile", quoteLimiter, profileRouter);
 app.use("/api/fx", quoteLimiter, fxRouter);
+app.use("/api/levels", quoteLimiter, levelsRouter);
+app.use("/api/cron", cronRouter);
 
 // In production we serve the built frontend from the same origin, so the
 // React app's relative `/api` calls just work (no CORS, no API base URL).

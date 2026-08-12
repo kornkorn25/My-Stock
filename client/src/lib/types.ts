@@ -81,3 +81,29 @@ export interface Quote {
   previousClose: number;
   fetchedAt: string;
 }
+
+export interface PortfolioSnapshotPoint {
+  date: string; // YYYY-MM-DD
+  totalValue: string;
+  totalCost: string;
+  totalUnrealized: string;
+  totalRealized: string;
+}
+
+export interface LevelZone {
+  price: number;
+  type: "support" | "resistance";
+  strength: number;
+  touches: number;
+  lastTouch: string;
+}
+
+export interface LevelsResponse {
+  symbol: string;
+  asOf: string;
+  barsUsed: number;
+  levels: {
+    support: LevelZone[];
+    resistance: LevelZone[];
+  };
+}

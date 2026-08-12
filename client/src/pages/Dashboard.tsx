@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { SummaryCards } from "../components/SummaryCards";
+import { ReturnsChart } from "../components/ReturnsChart";
 import { AllocationPie } from "../components/AllocationPie";
 import { HoldingsTable } from "../components/HoldingsTable";
 import { AddTransactionModal } from "../components/AddTransactionModal";
@@ -52,6 +53,8 @@ export function Dashboard() {
       {data && (
         <>
           <SummaryCards summary={data.summary} />
+
+          <ReturnsChart />
 
           <div className="grid gap-6 lg:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-1">

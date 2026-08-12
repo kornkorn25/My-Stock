@@ -31,6 +31,7 @@ model User {
   transactions       Transaction[]
   holdings           Holding[]
   verificationTokens VerificationToken[]
+  snapshots          PortfolioSnapshot[]
 }
 
 // One-time tokens for email-confirmed changes (email / password).
@@ -77,5 +78,24 @@ model Holding {
   updatedAt   DateTime @updatedAt
 
   @@unique([userId, symbol])
+  @@index([userId])
+}
+
+// One row per user per day, written by the daily cron (see routes/cron.ts).
+// Powers the returns-over-time chart. History only starts accumulating from
+// whenever the cron is first deployed — there's no way to backfill past
+// portfolio state from current holdings alone.
+model PortfolioSnapshot {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date            DateTime // UTC midnight of the day this snapshot represents
+  totalValue      Decimal
+  totalCost       Decimal
+  totalUnrealized Decimal
+  totalRealized   Decimal
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, date])
   @@index([userId])
 }

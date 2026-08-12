@@ -5,6 +5,7 @@ import {
   Holding,
   Transaction,
   TxType,
+  PortfolioSnapshotPoint,
 } from "../lib/types";
 
 export function usePortfolio() {
@@ -13,6 +14,15 @@ export function usePortfolio() {
     queryFn: () => api.get<PortfolioResponse>("/api/portfolio"),
     // Portfolio depends on near-realtime quotes; refresh periodically.
     refetchInterval: 60_000,
+  });
+}
+
+/** Daily value/cost snapshots for the returns-over-time chart. */
+export function usePortfolioHistory(days: number) {
+  return useQuery({
+    queryKey: ["portfolio", "history", days],
+    queryFn: () => api.get<{ snapshots: PortfolioSnapshotPoint[] }>(`/api/portfolio/history?days=${days}`),
+    staleTime: 5 * 60 * 1000,
   });
 }
 

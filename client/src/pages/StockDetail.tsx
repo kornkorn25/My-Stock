@@ -124,7 +124,7 @@ export function StockDetail() {
         </div>
       )}
 
-      {quote.data && <SupportLevels quote={quote.data.quote} />}
+      {quote.data && <SupportLevels symbol={sym} quote={quote.data.quote} />}
 
       <TradingViewChart symbol={sym} />
 
