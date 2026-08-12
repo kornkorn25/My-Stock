@@ -32,7 +32,8 @@ export async function recomputeAndPersistHolding(userId: string, symbol: string)
 
   const state = recomputeHolding(ledger);
 
-  // Preserve a previously set targetPct across recomputes.
+  // Preserve a previously set targetPct across recomputes (it doesn't depend
+  // on the ledger, so a new/edited/deleted transaction shouldn't touch it).
   const existing = await prisma.holding.findUnique({
     where: { userId_symbol: { userId, symbol: sym } },
   });
@@ -51,6 +52,11 @@ export async function recomputeAndPersistHolding(userId: string, symbol: string)
       quantity: state.quantity.toString(),
       avgCost: state.avgCost.toString(),
       realizedPnl: state.realizedPnl.toString(),
+      // avgCostOverride claims to be "the current avg cost" — a ledger change
+      // (this function running at all means one just happened) makes that
+      // claim stale, so clear it rather than silently keep showing a number
+      // that no longer accounts for the new transaction.
+      avgCostOverride: null,
     },
   });
 

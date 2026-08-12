@@ -24,6 +24,7 @@ export interface Holding {
   symbol: string;
   quantity: string;
   avgCost: string;
+  avgCostOverride: string | null;
   realizedPnl: string;
   targetPct: string | null;
   updatedAt: string;
@@ -32,7 +33,11 @@ export interface Holding {
 export interface Position {
   symbol: string;
   quantity: string;
+  /** Effective avg cost — the manual override if one is set, else the ledger-computed value. */
   avgCost: string;
+  /** The ledger-computed avg cost, ignoring any override. Used for the "reset" affordance. */
+  computedAvgCost: string;
+  avgCostOverridden: boolean;
   currentPrice: string | null;
   marketValue: string | null;
   costBasis: string;

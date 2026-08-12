@@ -99,3 +99,13 @@ export function useSetTarget() {
     onSuccess: () => invalidateAll(qc),
   });
 }
+
+/** Set (or clear, with avgCost: null) a manual avg-cost override for a symbol. */
+export function useSetAvgCostOverride() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ symbol, avgCost }: { symbol: string; avgCost: string | null }) =>
+      api.put<{ holding: Holding }>(`/api/holdings/${symbol}/avg-cost`, { avgCost }),
+    onSuccess: () => invalidateAll(qc),
+  });
+}

@@ -64,7 +64,15 @@ export function HoldingsTable({
                 </button>
               </td>
               <td className="px-4 py-3 text-right tabular-nums">{shares(p.quantity)}</td>
-              <td className="px-4 py-3 text-right tabular-nums">{money(p.avgCost)}</td>
+              <td className="px-4 py-3 text-right tabular-nums">
+                {money(p.avgCost)}
+                {p.avgCostOverridden && (
+                  <span
+                    title="Manually corrected — see the stock page to change or reset it"
+                    className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-sky-500 align-middle"
+                  />
+                )}
+              </td>
               <td className="px-4 py-3 text-right tabular-nums">
                 {p.priceError ? (
                   <span className="text-xs text-amber-600" title={p.priceError}>

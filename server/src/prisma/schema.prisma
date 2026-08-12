@@ -72,7 +72,8 @@ model Holding {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   symbol      String
   quantity    Decimal // current shares held
-  avgCost     Decimal // average cost per share
+  avgCost     Decimal // average cost per share, computed from the ledger — never edited directly
+  avgCostOverride Decimal? // manual correction shown/used in place of avgCost (e.g. broker mismatch, pre-tracking holdings); survives ledger recomputes
   realizedPnl Decimal  @default(0) // realized P/L from sells
   targetPct   Decimal? // optional target allocation %, e.g. 25.00
   updatedAt   DateTime @updatedAt

@@ -49,7 +49,13 @@ export async function computePortfolioSummary(userId: string) {
 
   const positions = quoted.map((item) => {
     const qty = new Decimal(item.holding.quantity);
-    const avg = new Decimal(item.holding.avgCost);
+    // avgCost is the ledger-computed truth; avgCostOverride, when set, is what
+    // gets used everywhere cost basis matters (here, and in the buy-preview
+    // math on the client) — but it never touches the underlying ledger math,
+    // so clearing it always falls back cleanly to the real computed value.
+    const computedAvg = new Decimal(item.holding.avgCost);
+    const avgCostOverridden = item.holding.avgCostOverride !== null;
+    const avg = avgCostOverridden ? new Decimal(item.holding.avgCostOverride!) : computedAvg;
     const costBasis = qty.times(avg);
     totalCost = totalCost.plus(costBasis);
 
@@ -58,6 +64,8 @@ export async function computePortfolioSummary(userId: string) {
         symbol: item.holding.symbol,
         quantity: qty.toString(),
         avgCost: avg.toString(),
+        computedAvgCost: computedAvg.toString(),
+        avgCostOverridden,
         currentPrice: null,
         marketValue: null,
         costBasis: costBasis.toString(),
@@ -82,6 +90,8 @@ export async function computePortfolioSummary(userId: string) {
       symbol: item.holding.symbol,
       quantity: qty.toString(),
       avgCost: avg.toString(),
+      computedAvgCost: computedAvg.toString(),
+      avgCostOverridden,
       currentPrice: item.price.toString(),
       marketValue: val.marketValue.toString(),
       costBasis: val.costBasis.toString(),
