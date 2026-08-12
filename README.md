@@ -1,146 +1,187 @@
 # MyStock
 
-Live at https://my-stock-ochre.vercel.app/
+**Know what your portfolio is actually worth.**
 
-A web app for keeping track of a US stock portfolio. You sign up, type in your
-own buys and sells, and the app works out what you're holding, your average cost,
-profit and loss, and how your money is split across stocks. Prices come in close
-to real time, and each stock has a TradingView chart with EMA 50, 100, and 200.
+MyStock is a multi-user web app for tracking a US stock portfolio. You log your
+own buys and sells; it turns that into average cost, realized and unrealized
+P/L, allocation, and live valuation — no spreadsheet required.
 
-It's multi-user, so everyone has their own account and sees only their own
-portfolio.
+[**Live app →**](https://my-stock-ochre.vercel.app/)
+[![CI](https://github.com/kornkorn25/My-Stock/actions/workflows/ci.yml/badge.svg)](https://github.com/kornkorn25/My-Stock/actions/workflows/ci.yml)
+
+---
 
 ## What it does
 
-- Sign up and log in with email and password. You have to verify your email
-  before the account turns on.
-- Sign in with Google as well (optional, turns on once you add a client ID).
-- Add, edit, and delete transactions. Holdings are recalculated from those.
-- See a dashboard with totals, an allocation pie, and a holdings table.
-- Open any stock for its position, support and resistance levels, and a chart.
-- Change your name, email, or password from the profile page. Email and password
-  changes are confirmed through a link sent to your inbox.
-- Switch between light and dark mode.
+**Portfolio tracking**
+- Log buys and sells; holdings, average cost, and realized/unrealized P/L are
+  recomputed from the full transaction ledger every time — never nudged, always
+  replayed, so the numbers can't drift out of sync with reality
+- Fractional shares work everywhere, down to 8 decimal places
+- Dashboard with portfolio totals, a value-over-time chart, an allocation
+  breakdown, and a holdings table
+- Size a buy by share count or by a money budget ("I have $500, how many
+  shares is that?")
+- Per-stock target allocation, flagged when you drift over it
+
+**Market data & analysis**
+- Near-real-time quotes, proxied through the backend so no API key ever
+  reaches the browser
+- TradingView chart per stock with EMA 50/100/200
+- Support and resistance levels computed from clustered swing highs/lows over
+  a year of daily price history, scored by touch count and recency — not a
+  single-day pivot formula
+- Live currency toggle (USD / THB) for the portfolio summary
+
+**Accounts**
+- Email/password signup with required email verification, or sign in with
+  Google
+- Change your name, email, or password — email and password changes are
+  confirmed by a link sent to your inbox
+- Every account only ever sees its own data; there's no cross-account leakage
+  by construction (every query is scoped to the authenticated user)
+
+---
 
 ## How it's built
 
-A few ideas it sticks to:
+A few rules the codebase sticks to throughout:
 
-1. The transaction list is the single source of truth. Every time you write a
-  transaction, the holding is rebuilt from the whole list rather than nudged up
-  or down. Running it again gives the same result.
-2. Fractional shares work everywhere. Money and share amounts use `Decimal`
-  (Prisma plus decimal.js), never floats.
-3. Charts are the free TradingView widget, just for looking at.
-4. Quotes come from Finnhub through the backend only, so the API key never
-  reaches the browser. Responses are cached and the endpoint is rate limited.
+1. **The transaction ledger is the only source of truth.** Holdings are a
+   derived cache, rebuilt by replaying the full ledger on every write —
+   running it twice gives the same answer.
+2. **Money is never a float.** Prices, quantities, and P/L are `Decimal`
+   (Prisma + decimal.js) end to end, both server- and client-side.
+3. **Charts are for looking, not for computing.** The TradingView widget is
+   free and view-only; every number on the page comes from the backend.
+4. **Third-party API keys never reach the browser.** Quotes, company
+   profiles, FX rates, and price history are all proxied through the backend,
+   cached, and rate-limited.
 
-## Tech
-
-- Frontend: React, Vite, TypeScript, React Router, TanStack Query, Tailwind, Recharts
-- Backend: Node, Express, TypeScript, Prisma, zod, bcrypt, JSON Web Tokens
-- Email: nodemailer (falls back to printing the link to the console if no SMTP is set)
-- Google sign-in: google-auth-library (verifies the ID token, no client secret needed)
-- Database: SQLite out of the box. Switch the provider in the Prisma schema to use Postgres.
-
-## Project layout
-
+```mermaid
+flowchart LR
+    subgraph Browser
+        UI["React SPA<br/>(Vite + Tailwind)"]
+    end
+    subgraph Vercel["Vercel — one domain"]
+        API["Express API<br/>(serverless function)"]
+        Cron["Daily Cron<br/>snapshot job"]
+    end
+    UI -- "/api/*" --> API
+    Cron --> API
+    API --> DB[(Neon Postgres)]
+    API -- "quotes, profiles, FX" --> Finnhub["Finnhub"]
+    API -- "1y price history" --> Yahoo["Yahoo Finance"]
+    UI -- "chart widget" --> TradingView["TradingView"]
 ```
-server/   Express API: auth, transactions, holdings, portfolio, quotes
-client/   React app: dashboard, stock detail, history, profile, login
-```
 
-## Running it locally
+---
 
-### Backend (port 4000)
+## Tech stack
+
+| | |
+|---|---|
+| **Frontend** | React 18, Vite, TypeScript, React Router, TanStack Query, Tailwind CSS, Recharts |
+| **Backend** | Node.js, Express, TypeScript, Prisma, zod, bcrypt, JWT |
+| **Database** | PostgreSQL (Neon) |
+| **External data** | Finnhub (quotes, company profiles), Yahoo Finance (price history), open.er-api.com (FX), TradingView (charts) |
+| **Infra** | Vercel (static frontend + serverless API + cron), GitHub Actions (typecheck, test, build on every push) |
+| **Testing** | Vitest — pure calculation logic (average cost, P/L, support/resistance) is unit-tested |
+
+---
+
+## Getting started
 
 ```bash
+# Backend — http://localhost:4000
 cd server
 npm install
-cp .env.example .env          # then fill in the values
+cp .env.example .env        # fill in DATABASE_URL at minimum
 npx prisma db push --schema=src/prisma/schema.prisma
 npm run dev
-```
 
-Put your Finnhub key in `server/.env` (grab a free one at https://finnhub.io).
-The app still runs without it, prices just show up as `n/a`.
-
-### Frontend (port 5173)
-
-```bash
+# Frontend — http://localhost:5173
 cd client
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173, sign up, and add a stock. In dev, the Vite server
-forwards `/api` calls to the backend on port 4000.
+Open `http://localhost:5173`, sign up, and add a transaction. In dev, Vite
+proxies `/api` calls to the backend on port 4000.
 
-### Optional setup
+A few things are optional and degrade gracefully without them:
 
-- Google sign-in: create an OAuth client ID (Web) in Google Cloud Console, add
-  `http://localhost:5173` as an authorized JavaScript origin, and put the ID in
-  `GOOGLE_CLIENT_ID`. The button shows up once it's set.
-- Real emails: fill in the `SMTP_*` values. Without them, verification links are
-  printed to the server console so you can still test the flow.
-
-## Tests
+| Feature | Env var | Without it |
+|---|---|---|
+| Live prices, logos, S/R | `FINNHUB_API_KEY` ([free key](https://finnhub.io)) | Prices show `n/a` |
+| Sending real emails | `SMTP_*` | Verification links print to the server console instead |
+| Google sign-in | `GOOGLE_CLIENT_ID` | The button is hidden |
+| Daily snapshot cron | `CRON_SECRET` | Endpoint runs unauthenticated (fine locally) |
 
 ```bash
-cd server
-npm test
+cd server && npm test    # unit tests for the calculation and analysis engine
 ```
 
-15 unit tests cover average cost, partial and full sells, fractional shares, and
-the rule that you can't sell more than you hold.
+The live site deploys as a single Vercel project — a static frontend, the
+Express API as one serverless function, and Neon Postgres — with `prisma db
+push` run automatically on every build.
 
-## The math (in server/src/services/portfolioCalc.ts)
+---
 
-- Buy: `avgCost = (oldQty*oldAvg + buyQty*buyPrice + fee) / (oldQty + buyQty)`
-- Sell: `realizedPnl += (sellPrice - avgCost)*sellQty - fee`, average cost stays
-  the same, and you can't sell more than you own
-- Position: `unrealizedPnl = qty*currentPrice - qty*avgCost`
-- Allocation: `allocationPct = marketValue / totalPortfolioValue * 100`
+## The math
+
+Core formulas, in [`server/src/services/portfolioCalc.ts`](server/src/services/portfolioCalc.ts):
+
+- **Buy:** `avgCost = (oldQty·oldAvg + buyQty·buyPrice + fee) / (oldQty + buyQty)`
+- **Sell:** `realizedPnl += (sellPrice − avgCost)·sellQty − fee`; average cost is
+  unchanged; you can't sell more than you hold
+- **Position:** `unrealizedPnl = qty·currentPrice − qty·avgCost`
+- **Allocation:** `allocationPct = marketValue / totalPortfolioValue × 100`
+
+Support/resistance, in [`server/src/services/levels.ts`](server/src/services/levels.ts):
+a bar is a swing high/low if it's the local extreme in a ±3-bar window; nearby
+swing points (within 1.5% of price) are merged into one zone; each zone is
+scored by touch count and how recently it was touched.
+
+---
 
 ## API
 
-Everything except register, login, and the Google and verify endpoints needs a
-`Bearer` token, and queries are scoped to the user in that token.
+Every route except register, login, Google sign-in, and email verification
+requires a `Bearer` token, and every query is scoped to the user in that token.
 
 | Method | Path | What it does |
-|--------|------|--------------|
-| POST | `/api/auth/register` | create an account, sends a verification email |
-| POST | `/api/auth/login` | log in, blocked until the email is verified |
-| POST | `/api/auth/google` | sign in with a Google ID token |
-| GET | `/api/auth/verify/:token` | confirm an email, email change, or password change |
-| POST | `/api/auth/resend-verification` | send the verification email again |
-| GET | `/api/auth/me` | the current user |
-| PATCH | `/api/auth/profile` | change the display name |
-| POST | `/api/auth/change-email` | start an email change (confirmed by link) |
-| POST | `/api/auth/change-password` | start a password change (confirmed by link) |
-| GET, POST | `/api/transactions` | list or add transactions |
-| PUT, DELETE | `/api/transactions/:id` | edit or remove a transaction |
-| GET | `/api/holdings` | holdings summary |
-| DELETE | `/api/holdings/:symbol` | remove a stock and its transactions |
-| GET | `/api/portfolio` | summary and positions valued at live prices |
-| GET | `/api/quote?symbol=PLTR` | Finnhub quote, cached and rate limited |
-| GET | `/api/profile?symbol=PLTR` | company name and logo |
+|---|---|---|
+| POST | `/api/auth/register` | Create an account, sends a verification email |
+| POST | `/api/auth/login` | Log in (blocked until email is verified) |
+| POST | `/api/auth/google` | Sign in with a Google ID token |
+| GET | `/api/auth/verify/:token` | Confirm an email, email change, or password change |
+| GET | `/api/auth/me` | Current user |
+| PATCH | `/api/auth/profile` | Change display name |
+| POST | `/api/auth/change-email` / `change-password` | Start a change, confirmed by email link |
+| GET, POST | `/api/transactions` | List or add transactions |
+| PUT, DELETE | `/api/transactions/:id` | Edit or remove a transaction |
+| GET | `/api/holdings` | Holdings summary |
+| DELETE | `/api/holdings/:symbol` | Remove a stock and its transactions |
+| GET | `/api/portfolio` | Summary and positions valued at live prices |
+| GET | `/api/portfolio/history?days=` | Daily value/cost snapshots for the returns chart |
+| GET | `/api/quote?symbol=` | Live quote (cached, rate-limited) |
+| GET | `/api/profile?symbol=` | Company name and logo |
+| GET | `/api/levels?symbol=&price=` | Support/resistance zones |
+| GET | `/api/fx?base=&quote=` | Spot exchange rate |
+| GET | `/api/cron/snapshot` | Writes today's portfolio snapshot for every user (cron-only) |
 
-## Security notes
+---
 
-- Passwords are hashed with bcrypt (cost 12). Nothing is stored in plain text.
-- Every query filters by the user ID from the token, so one account can't see
-  another's data.
-- The Finnhub key, JWT secret, and database URL live only in `server/.env`,
-  which is gitignored.
-- All input goes through zod. Quantity and price have to be positive, and sells
-  can't go past what you hold.
-- The quote endpoint is rate limited and cached to stay under the Finnhub quota.
-- CORS is locked to the configured client origin.
+## Security
 
-## Deploying
-
-In production the Express server also serves the built React app, so the whole
-thing runs on one domain. Build the client, build the server, point
-`DATABASE_URL` at a database that survives restarts (Postgres, or SQLite on a
-persistent volume), and set the environment variables from `.env.example`.
+- Passwords hashed with bcrypt (cost 12); nothing stored in plain text
+- Every query filters by the user ID from the JWT — one account can never see
+  another's data
+- All input validated with zod; quantities and prices must be positive, and
+  sells can't exceed what's held
+- Market-data and cron endpoints are rate-limited and cache-backed to stay
+  under upstream quotas
+- Secrets (Finnhub key, JWT secret, database URL, cron secret) live only in
+  environment variables, never in the repo
+- CORS locked to the configured client origin
