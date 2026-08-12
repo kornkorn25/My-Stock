@@ -8,9 +8,13 @@ import { recomputeHolding, LedgerTx } from "./portfolioCalc";
  */
 export async function recomputeAndPersistHolding(userId: string, symbol: string) {
   const sym = symbol.toUpperCase();
+  // executedAt only has day precision (the UI is a date picker, no time), so
+  // same-day trades tie on it — Postgres doesn't guarantee a stable order for
+  // ties. createdAt breaks the tie deterministically, in the order the
+  // transactions were actually entered.
   const txs = await prisma.transaction.findMany({
     where: { userId, symbol: sym },
-    orderBy: { executedAt: "asc" },
+    orderBy: [{ executedAt: "asc" }, { createdAt: "asc" }],
   });
 
   if (txs.length === 0) {

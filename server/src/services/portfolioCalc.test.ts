@@ -126,6 +126,30 @@ describe("recomputeHolding - SELL", () => {
     expect(r.quantity.toString()).toBe("6");
     expect(r.realizedPnl.toString()).toBe("200");
   });
+
+  it("breaks same-day ties by input order (BUY before SELL)", () => {
+    // executedAt is date-only in the UI, so two trades on the same day tie on
+    // it. The sort is stable, so whoever is earlier in the input array — i.e.
+    // whatever order the caller's secondary sort (createdAt) put them in —
+    // replays first. Here the BUY must apply before the SELL.
+    const txs: LedgerTx[] = [
+      { type: "BUY", quantity: 5, price: 100, executedAt: "2024-01-01" },
+      { type: "SELL", quantity: 2, price: 120, executedAt: "2024-01-01" },
+    ];
+    const r = recomputeHolding(txs);
+    expect(r.quantity.toString()).toBe("3");
+    expect(r.realizedPnl.toString()).toBe("40"); // (120-100)*2
+  });
+
+  it("throws if a same-day tie is fed SELL before BUY", () => {
+    // Documents why callers must pre-sort with a deterministic tiebreaker:
+    // feeding same-day transactions in the wrong order changes the outcome.
+    const txs: LedgerTx[] = [
+      { type: "SELL", quantity: 2, price: 120, executedAt: "2024-01-01" },
+      { type: "BUY", quantity: 5, price: 100, executedAt: "2024-01-01" },
+    ];
+    expect(() => recomputeHolding(txs)).toThrow(/Cannot sell/);
+  });
 });
 
 describe("valuePosition", () => {

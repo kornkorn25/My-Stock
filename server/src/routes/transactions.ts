@@ -38,7 +38,7 @@ const updateSchema = createSchema.partial();
 transactionsRouter.get("/", async (req: AuthedRequest, res: Response) => {
   const txs = await prisma.transaction.findMany({
     where: { userId: req.userId },
-    orderBy: { executedAt: "desc" },
+    orderBy: [{ executedAt: "desc" }, { createdAt: "desc" }],
   });
   res.json({ transactions: txs.map(serializeTx) });
 });

@@ -102,9 +102,6 @@ export function AddTransactionModal({
   const sharesFromAmount = priceNum > 0 ? amountUSD / priceNum : 0;
   const effQty = sizeMode === "amount" ? sharesFromAmount : num(quantity);
 
-  const canSubmit =
-    symbolStatus === "valid" && !create.isPending && effQty > 0 && priceNum > 0;
-
   // Live preview of avg cost / remaining qty (display only).
   const preview = useMemo(() => {
     const q = effQty;
@@ -131,6 +128,18 @@ export function AddTransactionModal({
       };
     }
   }, [effQty, priceNum, fee, type, current, money]);
+
+  const previewError = preview && "error" in preview ? preview.error : null;
+  const canSubmit =
+    symbolStatus === "valid" && !create.isPending && effQty > 0 && priceNum > 0 && !previewError;
+
+  // A submit error only describes the fields as they were at submit time —
+  // once the user changes anything, it's stale, so clear it immediately
+  // rather than leaving it on screen until the next submit attempt.
+  useEffect(() => {
+    setError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, type, sizeMode, quantity, amount, price, fee, executedAt]);
 
   if (!open) return null;
 
@@ -333,38 +342,43 @@ export function AddTransactionModal({
             />
           </div>
 
-          {preview && (
-            <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800">
-              {"error" in preview ? (
-                <span className="text-loss">{preview.error}</span>
-              ) : (
-                <div className="space-y-1">
-                  {sizeMode === "amount" && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Est. shares</span>
-                      <span className="font-semibold dark:text-slate-100">
-                        ≈ {shares(preview.txQty)}
-                        <span className="ml-2 text-xs text-slate-400">
-                          @ ${priceNum.toFixed(2)}
-                        </span>
-                      </span>
-                    </div>
-                  )}
+          {/* Always rendered at a stable min-height (even with nothing to show yet)
+              so it never appears mid-interaction and shifts the Save button
+              out from under a click. */}
+          <div className="flex min-h-[42px] items-center rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-800">
+            {previewError ? (
+              <span className="text-loss">{previewError}</span>
+            ) : preview ? (
+              <div className="w-full space-y-1">
+                {sizeMode === "amount" && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-slate-400">{preview.label}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Est. shares</span>
                     <span className="font-semibold dark:text-slate-100">
-                      {preview.value}
+                      ≈ {shares(preview.txQty)}
                       <span className="ml-2 text-xs text-slate-400">
-                        {type === "BUY"
-                          ? `total ${shares(preview.qty)} sh`
-                          : `${shares(preview.qty)} sh left`}
+                        @ ${priceNum.toFixed(2)}
                       </span>
                     </span>
                   </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-slate-500 dark:text-slate-400">{preview.label}</span>
+                  <span className="font-semibold dark:text-slate-100">
+                    {preview.value}
+                    <span className="ml-2 text-xs text-slate-400">
+                      {type === "BUY"
+                        ? `total ${shares(preview.qty)} sh`
+                        : `${shares(preview.qty)} sh left`}
+                    </span>
+                  </span>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400">
+                Fill in {sizeMode === "amount" ? "a budget" : "a quantity"} and price to preview the trade.
+              </span>
+            )}
+          </div>
 
           {error && (
             <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">{error}</div>

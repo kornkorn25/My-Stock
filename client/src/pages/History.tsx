@@ -54,6 +54,18 @@ export function History() {
     });
   }
 
+  function cancelEdit() {
+    setEditing(null);
+    setRowError(null);
+  }
+
+  // A row error only describes the draft as it was at save time — once the
+  // user changes anything, it's stale, so clear it along with the edit.
+  function updateDraft(patch: Partial<Transaction>) {
+    setRowError(null);
+    setDraft((d) => ({ ...d, ...patch }));
+  }
+
   async function saveEdit(id: string) {
     setRowError(null);
     try {
@@ -163,7 +175,7 @@ export function History() {
                       <input
                         type="date"
                         value={draft.executedAt as string}
-                        onChange={(e) => setDraft({ ...draft, executedAt: e.target.value })}
+                        onChange={(e) => updateDraft({ executedAt: e.target.value })}
                         className="w-32 rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-xs"
                       />
                     </td>
@@ -171,7 +183,7 @@ export function History() {
                       <input
                         value={draft.symbol}
                         onChange={(e) =>
-                          setDraft({ ...draft, symbol: e.target.value.toUpperCase() })
+                          updateDraft({ symbol: e.target.value.toUpperCase() })
                         }
                         className="w-16 rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-xs uppercase"
                       />
@@ -180,7 +192,7 @@ export function History() {
                       <select
                         value={draft.type}
                         onChange={(e) =>
-                          setDraft({ ...draft, type: e.target.value as Transaction["type"] })
+                          updateDraft({ type: e.target.value as Transaction["type"] })
                         }
                         className="rounded border border-slate-300 px-1 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                       >
@@ -191,28 +203,28 @@ export function History() {
                     <td className="px-3 py-2 text-right">
                       <input
                         value={draft.quantity}
-                        onChange={(e) => setDraft({ ...draft, quantity: e.target.value })}
+                        onChange={(e) => updateDraft({ quantity: e.target.value })}
                         className="w-20 rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-right text-xs"
                       />
                     </td>
                     <td className="px-3 py-2 text-right">
                       <input
                         value={draft.price}
-                        onChange={(e) => setDraft({ ...draft, price: e.target.value })}
+                        onChange={(e) => updateDraft({ price: e.target.value })}
                         className="w-20 rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-right text-xs"
                       />
                     </td>
                     <td className="px-3 py-2 text-right">
                       <input
                         value={draft.fee}
-                        onChange={(e) => setDraft({ ...draft, fee: e.target.value })}
+                        onChange={(e) => updateDraft({ fee: e.target.value })}
                         className="w-16 rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-right text-xs"
                       />
                     </td>
                     <td className="px-3 py-2">
                       <input
                         value={draft.note ?? ""}
-                        onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                        onChange={(e) => updateDraft({ note: e.target.value })}
                         className="w-28 rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-xs"
                       />
                     </td>
@@ -226,7 +238,7 @@ export function History() {
                           Save
                         </button>
                         <button
-                          onClick={() => setEditing(null)}
+                          onClick={cancelEdit}
                           className="rounded border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 px-2 py-1 text-xs"
                         >
                           Cancel
