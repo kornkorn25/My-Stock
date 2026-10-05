@@ -6,7 +6,7 @@ MyStock is a multi-user web app for tracking a US stock portfolio. You log your
 own buys and sells; it turns that into average cost, realized and unrealized
 P/L, allocation, and live valuation — no spreadsheet required.
 
-[**Live app →**](https://my-stock-ochre.vercel.app/)
+[**Live app →**](https://mystock101.vercel.app/)
 [![CI](https://github.com/kornkorn25/My-Stock/actions/workflows/ci.yml/badge.svg)](https://github.com/kornkorn25/My-Stock/actions/workflows/ci.yml)
 
 ---
